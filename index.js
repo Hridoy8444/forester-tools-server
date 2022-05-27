@@ -20,6 +20,7 @@ async function run() {
         await client.connect();
         const toolCollection = client.db('manufacturer-website').collection('tools');
         const orderCollection = client.db('manufacturer-website').collection('orders');
+        const reviewCollection = client.db('manufacturer-website').collection('reviews');
         console.log('connected');
 
         app.post('/tool', async (req, res) => {
@@ -94,6 +95,19 @@ async function run() {
             const updatedOrder = await orderCollection.updateOne(filter, updatedDoc)
             res.send(updatedDoc);
 
+        });
+
+        //review
+        app.post('/reviews', async (req, res) => {
+            const userReviews = req.body;
+            const result = reviewCollection.insertOne(userReviews);
+            res.send({ success: true, result });
+
+        });
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const userReviews = await reviewCollection.find(query).toArray();
+            res.send(userReviews);
         });
         
     }
