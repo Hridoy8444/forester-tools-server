@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -19,7 +19,15 @@ async function run() {
     try {
         await client.connect();
         const toolCollection = client.db('manufacturer-website').collection('tools');
+        const orderCollection = client.db('manufacturer-website').collection('orders');
         console.log('connected');
+
+        app.post('/tool', async (req, res) => {
+            const tool = req.body;
+            const result = toolCollection.insertOne(tool);
+            res.send({ success: true, result });
+
+        });
 
         app.get('/tool', async (req, res) => {
             const query = {}
@@ -27,6 +35,67 @@ async function run() {
             const tools = await cursor.toArray();
             res.send(tools);
         });
+        app.get('/tool/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const tools = await toolCollection.findOne(query);
+            res.send(tools);
+        });
+
+
+         // order
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const result = orderCollection.insertOne(order);
+            res.send({ success: true, result });
+
+
+        });
+        app.get('/order', async (req, res) => {
+            const email = req.query.email;
+            const decodedEmail = req.decoded.email;
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const orders = await orderCollection.find(query).toArray();
+                return res.send(orders);
+            } else {
+                return res.status(403).send({ message: 'Forbidden Access' })
+            }
+
+        });
+
+       
+
+        app.get('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await orderCollection.findOne(query);
+            res.send(order);
+        });
+
+        app.delete('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(filter);
+            res.send(result);
+        });
+
+        app.patch('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'paid',
+                    transactionId: payment.transactionId
+                }
+            }
+            const result = await paymentCollection.insertOne(payment);
+            const updatedOrder = await orderCollection.updateOne(filter, updatedDoc)
+            res.send(updatedDoc);
+
+        });
+        
     }
     finally {
 
