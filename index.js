@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-// var jwt = require('jsonwebtoken');
+var jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -62,7 +62,7 @@ async function run() {
         });
 
 
-         // order
+        // order
         app.post('/order', async (req, res) => {
             const order = req.body;
             const result = orderCollection.insertOne(order);
@@ -70,7 +70,7 @@ async function run() {
 
 
         });
-        app.get('/order',  async (req, res) => {
+        app.get('/order', async (req, res) => {
             const email = req.query.email;
             // const decodedEmail = req.email;
             if (email) {
@@ -83,7 +83,7 @@ async function run() {
 
         });
 
-       
+
 
         app.get('/order/:id', async (req, res) => {
             const id = req.params.id;
@@ -129,35 +129,50 @@ async function run() {
         });
 
         //  users
-         app.get('/admin/:email', async (req, res) => {
-            const email = req.params.email;
-            const user = await userCollection.findOne({ email: email });
-            const isAdmin = user.role === 'admin';
-            res.send({ admin: isAdmin });
-        })
+        // app.get('/admin/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const user = await userCollection.findOne({ email: email });
+        //     const isAdmin = user.role === 'admin';
+        //     res.send({ admin: isAdmin });
+        // })
 
 
-        app.put('/user/admin/:email',  async (req, res) => {
-            const email = req.params.email;
-            const requester = req.decoded.email;
-            requesterAccount = await userCollection.findOne({ email: requester });
-            if (requesterAccount.role === 'admin') {
-                const filter = { email: email };
-                const updateDoc = {
-                    $set: { role: 'admin' },
+        // app.put('/user/admin/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const requester = req.decoded.email;
+        //     requesterAccount = await userCollection.findOne({ email: requester });
+        //     if (requesterAccount.role === 'admin') {
+        //         const filter = { email: email };
+        //         const updateDoc = {
+        //             $set: { role: 'admin' },
 
-                };
-                const result = await userCollection.updateOne(filter, updateDoc);
-                res.send(result);
-            }
-            else {
-                res.status(403).send({ message: 'Forbidden Access' })
-            }
+        //         };
+        //         const result = await userCollection.updateOne(filter, updateDoc);
+        //         res.send(result);
+        //     }
+        //     else {
+        //         res.status(403).send({ message: 'Forbidden Access' })
+        //     }
 
 
 
-        });
+        // });
 
+        // app.put('/user/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const user = req.body;
+        //     const filter = { email: email };
+        //     const options = { upsert: true };
+        //     const updateDoc = {
+        //         $set: user,
+
+        //     };
+        //     const result = await userCollection.updateOne(filter, updateDoc, options);
+        //     const accessToken = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+        //     res.send({ success: true, result, accessToken });
+
+
+        // });
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
@@ -168,21 +183,21 @@ async function run() {
 
             };
             const result = await userCollection.updateOne(filter, updateDoc, options);
-            const accessToken = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
-            res.send({ success: true, result, accessToken });
+            const accessToken = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
+            res.send({ result, accessToken });
 
-
-        });
-        app.get('/user/:email', async (req, res) => {
-            const email = req.params.email;
-            const query = { email: email };
-            const user = await userCollection.findOne(query);
-            res.send(user);
         })
+
+        // app.get('/user/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = { email: email };
+        //     const user = await userCollection.findOne(query);
+        //     res.send(user);
+        // })
     }
 
-     
-    
+
+
     finally {
 
     }
