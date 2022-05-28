@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+// var jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -15,10 +16,27 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.t3wydbn.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// verify jwt
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unauthorized access' })
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access' })
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
+
 async function run() {
     try {
         await client.connect();
         const toolCollection = client.db('manufacturer-website').collection('tools');
+        const userCollection = client.db('manufacturer-website').collection('users');
         const orderCollection = client.db('manufacturer-website').collection('orders');
         const reviewCollection = client.db('manufacturer-website').collection('reviews');
         console.log('connected');
@@ -52,10 +70,10 @@ async function run() {
 
 
         });
-        app.get('/order', async (req, res) => {
+        app.get('/order',  async (req, res) => {
             const email = req.query.email;
-            const decodedEmail = req.decoded.email;
-            if (email === decodedEmail) {
+            // const decodedEmail = req.email;
+            if (email) {
                 const query = { email: email };
                 const orders = await orderCollection.find(query).toArray();
                 return res.send(orders);
@@ -110,7 +128,7 @@ async function run() {
             res.send(userReviews);
         });
 
-         //users
+        //  users
          app.get('/admin/:email', async (req, res) => {
             const email = req.params.email;
             const user = await userCollection.findOne({ email: email });
@@ -119,7 +137,7 @@ async function run() {
         })
 
 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email',  async (req, res) => {
             const email = req.params.email;
             const requester = req.decoded.email;
             requesterAccount = await userCollection.findOne({ email: requester });
